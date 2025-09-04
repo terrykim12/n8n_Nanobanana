@@ -1,0 +1,5 @@
+# OpenAI API 키 설정
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Crew AI 설정
+CREWAI_LOG_LEVEL=INFO

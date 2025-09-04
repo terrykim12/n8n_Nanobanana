@@ -1,0 +1,335 @@
+{
+  "name": "Nanobanana",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a099d311-150f-4a53-a7fa-e5d6f2bea2dc",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1520,
+        -208
+      ],
+      "id": "3f39f551-59ea-4bb6-b631-36580ce698a8",
+      "name": "Webhook",
+      "webhookId": "a099d311-150f-4a53-a7fa-e5d6f2bea2dc"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"fileId\": \"{{$json.id}}\",\n  \"name\": \"{{$json.name}}\",\n  \"mimeType\": \"{{$json.mimeType}}\",\n  \"viewUrl\": \"{{$json.webViewLink}}\",\n  \"downloadUrl\": \"https://drive.google.com/uc?id={{$json.id}}&export=download\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        496,
+        -208
+      ],
+      "id": "ea81687b-ef51-4e25-a43a-104c44b27e91",
+      "name": "Send back"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -640,
+        -208
+      ],
+      "id": "55f89b5b-2ed8-46f0-873e-79e74b0a5c60",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kKDPk9RE5DJZf15s",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -208
+      ],
+      "id": "9869d39c-1d92-4a8c-b63c-a6f0ad1da911",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"inline_data\": {\n            \"mime_type\": \"image/png\",\n            \"data\": \"{{ $('Extract from File').item.json.data.replace(/^data:.*;base64,/, '') }}\"\n          }\n        },\n        { \"text\": \"{{ $('Webhook').item.json.body.prompt }}\" }\n      ]\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -288,
+        -208
+      ],
+      "id": "61f0f27f-ce1c-4e43-b504-73ecbc49935a",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "jIjpCbX3PGlko8Oc",
+          "name": "Header Auth account"
+        },
+        "googlePalmApi": {
+          "id": "XZgEmmHAcyqj3MF8",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{ 'name = \"' + $json.fileName + '\" and trashed = false' }}",
+        "limit": 1,
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -912,
+        -208
+      ],
+      "id": "7cfb7710-b990-4b48-ba76-012cb67c3831",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kKDPk9RE5DJZf15s",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "=={{ \n  ('edited' + $now.setZone('Asia/Seoul').toFormat('yyyyMMdd_HHmm') + '.jpg')}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1n5H_RylzoHybrJoyM7iF0miplniOL1Qu",
+          "mode": "list",
+          "cachedResultName": "Ai_agent",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1n5H_RylzoHybrJoyM7iF0miplniOL1Qu"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        304,
+        -208
+      ],
+      "id": "17fb4dae-17b1-477c-a0d8-40147b06bdb9",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kKDPk9RE5DJZf15s",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.body"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1264,
+        -208
+      ],
+      "id": "f1a406cf-e2e1-47ab-bc9d-3cfed134b9ed",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === 설정(원하면 바꾸세요) ==========================\nconst TARGET_FORMAT = 'jpg';   // 'jpg' | 'webp' | null  (null이면 변환 안 함)\nconst MAX_W = 1600;            // 변환 시 가로 리사이즈 한계 (크면 축소)\nconst JPG_QUALITY = 85;        // 1~100\n// ====================================================\n\nconst parts = $json.candidates?.[0]?.content?.parts ?? [];\n\n// 1) 모든 텍스트 합치기 (선택)\nconst text_all = parts\n  .filter(p => typeof p.text === 'string')\n  .map(p => p.text)\n  .join('\\n')\n  .trim();\n\n// 2) inline 이미지 (camelCase + snake_case 모두 탐색)\nfunction findInline(parts) {\n  for (const p of parts) {\n    if (p?.inlineData?.data) {\n      return { data: p.inlineData.data, mime: p.inlineData.mimeType };\n    }\n    if (p?.inline_data?.data) {\n      return { data: p.inline_data.data, mime: p.inline_data.mime_type };\n    }\n  }\n  return { data: '', mime: '' };\n}\n\nlet { data: raw0, mime: mime0 } = findInline(parts);\nlet raw = String(raw0 || '').replace(/^data:.*?;base64,/, '').replace(/\\s/g,''); // 접두어/공백 제거\nlet image_mime = mime0 || 'image/png';\n\n// (선택) 변환: TARGET_FORMAT이 설정된 경우에만 시도\nasync function maybeConvert(b64, srcMime) {\n  if (!b64 || !TARGET_FORMAT) return { b64, mime: srcMime, note: 'no-convert' };\n\n  const targetMime = (TARGET_FORMAT === 'jpg')\n    ? 'image/jpeg'\n    : (TARGET_FORMAT === 'webp')\n      ? 'image/webp'\n      : srcMime;\n\n  try {\n    const Jimp = require('jimp');          // 외부 모듈 필요\n    const buf = Buffer.from(b64, 'base64');\n    const img = await Jimp.read(buf);\n\n    if (img.bitmap.width > MAX_W) img.resize(MAX_W, Jimp.AUTO);\n\n    let outBuf;\n    if (TARGET_FORMAT === 'jpg') {\n      img.quality(JPG_QUALITY);\n      outBuf = await img.getBufferAsync(Jimp.MIME_JPEG);\n    } else if (TARGET_FORMAT === 'webp') {\n      outBuf = await img.getBufferAsync('image/webp'); // 기본 품질 사용\n    } else {\n      return { b64, mime: srcMime, note: 'unknown-target' };\n    }\n\n    return { b64: outBuf.toString('base64'), mime: targetMime, note: 'converted' };\n  } catch (e) {\n    // Jimp 미설치/변환 실패 시 원본 유지\n    return { b64, mime: srcMime, warn: e.message || String(e) };\n  }\n}\n\nconst conv = await maybeConvert(raw, image_mime);\nraw = conv.b64;\nimage_mime = conv.mime;\n\n// 3) 파일명\nconst ext = image_mime.split('/')[1].replace('jpeg','jpg');\nconst filename = `edited_${$now.toFormat('yyyyMMdd_HHmmss')}.${ext}`;\n\n// === 출력(JSON) ===\nreturn { json: { text_all, b64: raw, image_mime, filename, convert_note: conv.note || '', warn: conv.warn || '' } };\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -208
+      ],
+      "id": "eecd1187-92c1-47af-a78b-a768376f4ce7",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "b64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        -208
+      ],
+      "id": "c56c5f30-3e5a-4b20-ba3b-50585d481907",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Send back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Seoul",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "Hp1C2LPA4KgYYnwO",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "versionId": "ba223ad6-f29f-44af-be3d-ddb3a66e3b0f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ac1f7bff01abab11d9580700c02d94e96a279438a79b2a17d8c07a38f76c3016"
+  },
+  "id": "IppVWFkewmTP3HM2",
+  "tags": []
+}
